@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,19 +10,19 @@
     }
     html, body {
       margin: 0;
+      padding: 0;
       background: black;
       color: #00ff00;
       font-family: monospace;
-      overflow: hidden;
       height: 100%;
-      width: 100%;
+      overflow: hidden;
       user-select: none;
     }
-    .overlay {
+    #lock-layer {
       position: fixed;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
       z-index: 9999;
     }
     .centered {
@@ -45,12 +44,8 @@
     }
     #terminal {
       margin-top: 20px;
-      text-align: left;
       max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-      height: 200px;
-      overflow-y: hidden;
+      margin: 20px auto;
       white-space: pre-wrap;
     }
     #unlocked {
@@ -61,7 +56,7 @@
   </style>
 </head>
 <body>
-  <div class="overlay" id="lock-layer"></div>
+  <div id="lock-layer"></div>
   <div class="centered">
     <h1>⚠️ HACKED BY ISI ⚠️</h1>
     <div id="terminal"></div>
@@ -73,22 +68,34 @@
   </audio>
 
   <script>
-    // Force fullscreen
-    document.documentElement.requestFullscreen?.();
+    // Request fullscreen for mobile devices
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) { // For Safari
+      document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) { // For Firefox
+      document.documentElement.mozRequestFullScreen();
+    }
 
-    // Disable input globally
+    // Block all mouse and keyboard events
     const lockLayer = document.getElementById("lock-layer");
-    const preventAll = (e) => {
+    const block = (e) => {
       e.stopPropagation();
       e.preventDefault();
       return false;
     };
 
-    ['keydown', 'keypress', 'keyup', 'mousedown', 'mouseup', 'click', 'contextmenu', 'mousemove'].forEach(evt =>
-      window.addEventListener(evt, preventAll, true)
-    );
+    // Block mouse events (clicks, movement)
+    ['mousedown', 'mouseup', 'mousemove', 'contextmenu'].forEach(evt => {
+      window.addEventListener(evt, block, { passive: false });
+    });
 
-    // Terminal typing effect
+    // Block keyboard events (all keys)
+    ['keydown', 'keypress', 'keyup'].forEach(evt => {
+      window.addEventListener(evt, block, { passive: false });
+    });
+
+    // Fake terminal typing effect
     const terminal = document.getElementById("terminal");
     const lines = [
       "Establishing secure connection to ISI HQ...",
@@ -100,28 +107,32 @@
       "Contacting local station...",
       "Preparing field operation...",
       "Target compromised.",
-      "",
     ];
-    let index = 0;
-    function typeLine() {
-      if (index < lines.length) {
-        terminal.innerHTML += lines[index] + "\n";
-        index++;
+    let i = 0;
+    const typeLine = () => {
+      if (i < lines.length) {
+        terminal.innerHTML += lines[i] + "\\n";
+        i++;
         setTimeout(typeLine, 1000);
       }
-    }
+    };
     typeLine();
 
-    // After 30 seconds, unlock everything
+    // Unlock everything after 30 seconds
     setTimeout(() => {
-      ['keydown', 'keypress', 'keyup', 'mousedown', 'mouseup', 'click', 'contextmenu', 'mousemove'].forEach(evt =>
-        window.removeEventListener(evt, preventAll, true)
-      );
-      lockLayer.remove();
+      // Remove the lock layer and restore all functionality
+      ['mousedown', 'mouseup', 'mousemove', 'contextmenu'].forEach(evt => {
+        window.removeEventListener(evt, block, { passive: false });
+      });
+      ['keydown', 'keypress', 'keyup'].forEach(evt => {
+        window.removeEventListener(evt, block, { passive: false });
+      });
+
       document.body.style.cursor = 'auto';
-      document.getElementById("unlocked").style.display = "block";
+      lockLayer.remove();
       document.querySelector("h1").style.display = "none";
       terminal.innerHTML = "";
+      document.getElementById("unlocked").style.display = "block";
     }, 30000);
   </script>
 </body>
